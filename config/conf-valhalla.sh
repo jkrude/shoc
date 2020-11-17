@@ -11,5 +11,5 @@ fi
 
 ./configure \
 CPPFLAGS="-I/usr/local/cuda-6.0/include/" \
-CUDA_CPPFLAGS="-DUSE_CLOCK_GETTIME -gencode=arch=compute_50,code=sm_50"
+CUDA_CPPFLAGS="-x cu -DUSE_CLOCK_GETTIME -gencode=arch=compute_50,code=sm_50"
 

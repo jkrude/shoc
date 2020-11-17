@@ -1,39 +1,67 @@
-#include "cudacommon.h"
+#include "CuplaInclude.hpp"
 #include <stdio.h>
+#include "cudacommon.h"
 #include "ResultDatabase.h"
 #include "OptionParser.h"
 #include "ProgressBar.h"
 #include "Utility.h"
 
 // Forward Declarations for benchmark kernels
-__global__ void    MAddU(float *target, float val1, float val2);
-__global__ void MulMAddU(float *target, float val1, float val2);
-__global__ void MAddU_DP(double *target, double val1, double val2);
-__global__ void MulMAddU_DP(double *target, double val1, double val2);
+struct MAddU;
+struct MulMAddU;
+struct MAddU_DP;
+struct MulMAddU_DP;
+
+//__global__ void MAddU(float *target, float val1, float val2);
+//__global__ void MulMAddU(float *target, float val1, float val2);
+//__global__ void MAddU_DP(double *target, double val1, double val2);
+//__global__ void MulMAddU_DP(double *target, double val1, double val2);
 
 // Add kernels
-template <class T> __global__ void Add1(T *data, int nIters, T v);
-template <class T> __global__ void Add2(T *data, int nIters, T v);
-template <class T> __global__ void Add4(T *data, int nIters, T v);
-template <class T> __global__ void Add8(T *data, int nIters, T v);
+
+template <class T> struct Add1;
+template <class T> struct Add2;
+template <class T> struct Add4;
+template <class T> struct Add8;
+
+//template <class T> __global__ void Add1(T *data, int nIters, T v);
+//template <class T> __global__ void Add2(T *data, int nIters, T v);
+//template <class T> __global__ void Add4(T *data, int nIters, T v);
+//template <class T> __global__ void Add8(T *data, int nIters, T v);
 
 // Mul kernels
-template <class T> __global__ void Mul1(T *data, int nIters, T v);
-template <class T> __global__ void Mul2(T *data, int nIters, T v);
-template <class T> __global__ void Mul4(T *data, int nIters, T v);
-template <class T> __global__ void Mul8(T *data, int nIters, T v);
+
+template <class T> struct Mul1;
+template <class T> struct Mul2;
+template <class T> struct Mul4;
+template <class T> struct Mul8;
+
+//template <class T> __global__ void Mul1(T *data, int nIters, T v);
+//template <class T> __global__ void Mul2(T *data, int nIters, T v);
+//template <class T> __global__ void Mul4(T *data, int nIters, T v);
+//template <class T> __global__ void Mul8(T *data, int nIters, T v);
 
 // MAdd kernels
-template <class T> __global__ void MAdd1(T *data, int nIters, T v1, T v2);
-template <class T> __global__ void MAdd2(T *data, int nIters, T v1, T v2);
-template <class T> __global__ void MAdd4(T *data, int nIters, T v1, T v2);
-template <class T> __global__ void MAdd8(T *data, int nIters, T v1, T v2);
+template <class T> struct MAdd1;
+template <class T> struct MAdd2;
+template <class T> struct MAdd4;
+template <class T> struct MAdd8;
+
+//template <class T> __global__ void MAdd1(T *data, int nIters, T v1, T v2);
+//template <class T> __global__ void MAdd2(T *data, int nIters, T v1, T v2);
+//template <class T> __global__ void MAdd4(T *data, int nIters, T v1, T v2);
+//template <class T> __global__ void MAdd8(T *data, int nIters, T v1, T v2);
 
 // MulMAdd kernels
-template <class T> __global__ void MulMAdd1(T *data, int nIters, T v1, T v2);
-template <class T> __global__ void MulMAdd2(T *data, int nIters, T v1, T v2);
-template <class T> __global__ void MulMAdd4(T *data, int nIters, T v1, T v2);
-template <class T> __global__ void MulMAdd8(T *data, int nIters, T v1, T v2);
+template <class T> struct MulMAdd1;
+template <class T> struct MulMAdd2;
+template <class T> struct MulMAdd4;
+template <class T> struct MulMAdd8;
+
+//template <class T> __global__ void MulMAdd1(T *data, int nIters, T v1, T v2);
+//template <class T> __global__ void MulMAdd2(T *data, int nIters, T v1, T v2);
+//template <class T> __global__ void MulMAdd4(T *data, int nIters, T v1, T v2);
+//template <class T> __global__ void MulMAdd8(T *data, int nIters, T v1, T v2);
 
 
 // Forward Declarations
@@ -155,7 +183,8 @@ void RunBenchmark(ResultDatabase &resultDB, OptionParser &op)
     // Benchmark the MulMAdd2 kernel to compute a scaling factor.
     t = 0.0f;
     cudaEventRecord(start, 0);
-    MulMAdd2<float><<< blocks, threads >>>(gpu_mem, 10, 3.75, 0.355);
+    CUPLA_KERNEL(MulMAdd2<float>)(blocks, threads)(gpu_mem, 10, 3.75, 0.355);
+    //MulMAdd2<float><<< blocks, threads >>>(gpu_mem, 10, 3.75, 0.355);
     cudaEventRecord(stop, 0);
     cudaEventSynchronize(stop);
     CHECK_CUDA_ERROR();
@@ -258,7 +287,8 @@ void RunBenchmark(ResultDatabase &resultDB, OptionParser &op)
     {
         t = 0.0f;
         cudaEventRecord(start, 0);
-        MAddU<<< blocks, threads >>>(target_sp, val1, val2);
+        CUPLA_KERNEL(MAddU)(blocks, threads)(target_sp, val1, val2);
+        //MAddU<<< blocks, threads >>>(target_sp, val1, val2);
         cudaEventRecord(stop, 0);
         cudaEventSynchronize(stop);
         CHECK_CUDA_ERROR();
@@ -277,7 +307,8 @@ void RunBenchmark(ResultDatabase &resultDB, OptionParser &op)
            pb.Show(stdout);
 
         cudaEventRecord(start, 0);
-        MulMAddU<<< blocks, threads >>>(target_sp, val1, val2);
+        CUPLA_KERNEL(MulMAddU)(blocks, threads)(target_sp, val1,val2);
+        //MulMAddU<<< blocks, threads >>>(target_sp, val1, val2);
         cudaEventRecord(stop, 0);
         cudaEventSynchronize(stop);
         CHECK_CUDA_ERROR();
@@ -314,7 +345,8 @@ void RunBenchmark(ResultDatabase &resultDB, OptionParser &op)
         {
 
             cudaEventRecord(start, 0);
-            MAddU_DP<<< blocks, threads >>>(target_dp, val1, val2);
+            CUPLA_KERNEL(MAddU_DP)(blocks,threads)(target_dp, val1, val2);
+            //MAddU_DP<<< blocks, threads >>>(target_dp, val1, val2);
             cudaEventRecord(stop, 0);
             cudaEventSynchronize(stop);
             CHECK_CUDA_ERROR();
@@ -334,7 +366,8 @@ void RunBenchmark(ResultDatabase &resultDB, OptionParser &op)
                pb.Show(stdout);
 
             cudaEventRecord(start, 0);
-            MulMAddU_DP<<< blocks, threads >>>(target_dp, val1, val2);
+            CUPLA_KERNEL(MulMAddU_DP)(blocks, threads)(target_dp, val1, val2);
+            //MulMAddU_DP<<< blocks, threads >>>(target_dp, val1, val2);
             cudaEventRecord(stop, 0);
             cudaEventSynchronize(stop);
             CHECK_CUDA_ERROR();
@@ -447,7 +480,8 @@ RunTest(ResultDatabase &resultDB,
        // Execute the Add1 kernel
        t = 0.0f;
        cudaEventRecord(start, 0);
-       Add1<T><<< blocks, threads >>>(gpu_mem, realRepeats, 10.0);
+       CUPLA_KERNEL(Add1<T>)(blocks,threads)(gpu_mem, realRepeats, 10.0);
+       //Add1<T><<< blocks, threads >>>(gpu_mem, realRepeats, 10.0);
        cudaEventRecord(stop, 0);
        cudaEventSynchronize(stop);
        CHECK_CUDA_ERROR();
@@ -507,7 +541,8 @@ RunTest(ResultDatabase &resultDB,
        // Execute the Add2 kernel
        t = 0.0f;
        cudaEventRecord(start, 0);
-       Add2<T><<< blocks, threads >>>(gpu_mem, realRepeats, 10.0);
+       CUPLA_KERNEL(Add2<T>)(blocks,threads)(gpu_mem, realRepeats, 10.0);
+       //Add2<T><<< blocks, threads >>>(gpu_mem, realRepeats, 10.0);
        cudaEventRecord(stop, 0);
        cudaEventSynchronize(stop);
        CHECK_CUDA_ERROR();
@@ -566,7 +601,8 @@ RunTest(ResultDatabase &resultDB,
        // Execute the Add4 kernel
        t = 0.0f;
        cudaEventRecord(start, 0);
-       Add4<T><<< blocks, threads >>>(gpu_mem, realRepeats, 10.0);
+       CUPLA_KERNEL(Add4<T>)(blocks, threads)(gpu_mem, realRepeats, 10.0);
+       //Add4<T><<< blocks, threads >>>(gpu_mem, realRepeats, 10.0);
        cudaEventRecord(stop, 0);
        cudaEventSynchronize(stop);
        CHECK_CUDA_ERROR();
@@ -625,7 +661,8 @@ RunTest(ResultDatabase &resultDB,
        // Execute the Add8 kernel
        t = 0.0f;
        cudaEventRecord(start, 0);
-       Add8<T><<< blocks, threads >>>(gpu_mem, realRepeats, 10.0);
+       CUPLA_KERNEL(Add8<T>)(blocks,threads)(gpu_mem, realRepeats, 10.0);
+       //Add8<T><<< blocks, threads >>>(gpu_mem, realRepeats, 10.0);
        cudaEventRecord(stop, 0);
        cudaEventSynchronize(stop);
        CHECK_CUDA_ERROR();
@@ -685,7 +722,8 @@ RunTest(ResultDatabase &resultDB,
        // Execute the Mul1 kernel
        t = 0.0f;
        cudaEventRecord(start, 0);
-       Mul1<T><<< blocks, threads >>>(gpu_mem, realRepeats, 1.01);
+       CUPLA_KERNEL(Mul1<T>)(blocks, threads)(gpu_mem, realRepeats, 1.01);
+       //Mul1<T><<< blocks, threads >>>(gpu_mem, realRepeats, 1.01);
        cudaEventRecord(stop, 0);
        cudaEventSynchronize(stop);
        CHECK_CUDA_ERROR();
@@ -745,7 +783,8 @@ RunTest(ResultDatabase &resultDB,
        // Execute the Mul2 kernel
        t = 0.0f;
        cudaEventRecord(start, 0);
-       Mul2<T><<< blocks, threads >>>(gpu_mem, realRepeats, 1.01);
+       CUPLA_KERNEL(Mul2<T>)(blocks, threads)(gpu_mem, realRepeats, 1.01);
+       //Mul2<T><<< blocks, threads >>>(gpu_mem, realRepeats, 1.01);
        cudaEventRecord(stop, 0);
        cudaEventSynchronize(stop);
        CHECK_CUDA_ERROR();
@@ -804,7 +843,8 @@ RunTest(ResultDatabase &resultDB,
        // Execute the Mul4 kernel
        t = 0.0f;
        cudaEventRecord(start, 0);
-       Mul4<T><<< blocks, threads >>>(gpu_mem, realRepeats, 1.01);
+       CUPLA_KERNEL(Mul4<T>)(blocks, threads)(gpu_mem, realRepeats, 1.01);
+       //Mul4<T><<< blocks, threads >>>(gpu_mem, realRepeats, 1.01);
        cudaEventRecord(stop, 0);
        cudaEventSynchronize(stop);
        CHECK_CUDA_ERROR();
@@ -863,7 +903,8 @@ RunTest(ResultDatabase &resultDB,
        // Execute the Mul8 kernel
        t = 0.0f;
        cudaEventRecord(start, 0);
-       Mul8<T><<< blocks, threads >>>(gpu_mem, realRepeats, 1.01);
+       CUPLA_KERNEL(Mul8<T>)(blocks, threads)(gpu_mem, realRepeats, 1.01);
+       //Mul8<T><<< blocks, threads >>>(gpu_mem, realRepeats, 1.01);
        cudaEventRecord(stop, 0);
        cudaEventSynchronize(stop);
        CHECK_CUDA_ERROR();
@@ -923,7 +964,8 @@ RunTest(ResultDatabase &resultDB,
        // Execute the MAdd1 kernel
        t = 0.0f;
        cudaEventRecord(start, 0);
-       MAdd1<T><<< blocks, threads >>>(gpu_mem, realRepeats, 10.0, 0.9899);
+       CUPLA_KERNEL(MAdd1<T>)(blocks, threads)(gpu_mem, realRepeats, 10.0, 0.9899);
+       //MAdd1<T><<< blocks, threads >>>(gpu_mem, realRepeats, 10.0, 0.9899);
        cudaEventRecord(stop, 0);
        cudaEventSynchronize(stop);
        CHECK_CUDA_ERROR();
@@ -983,7 +1025,8 @@ RunTest(ResultDatabase &resultDB,
        // Execute the MAdd2 kernel
        t = 0.0f;
        cudaEventRecord(start, 0);
-       MAdd2<T><<< blocks, threads >>>(gpu_mem, realRepeats, 10.0, 0.9899);
+       CUPLA_KERNEL(MAdd2<T>)(blocks, threads)(gpu_mem, realRepeats, 10.0, 0.9899);
+       //MAdd2<T><<< blocks, threads >>>(gpu_mem, realRepeats, 10.0, 0.9899);
        cudaEventRecord(stop, 0);
        cudaEventSynchronize(stop);
        CHECK_CUDA_ERROR();
@@ -1042,7 +1085,8 @@ RunTest(ResultDatabase &resultDB,
        // Execute the MAdd4 kernel
        t = 0.0f;
        cudaEventRecord(start, 0);
-       MAdd4<T><<< blocks, threads >>>(gpu_mem, realRepeats, 10.0, 0.9899);
+       CUPLA_KERNEL(MAdd4<T>)(blocks, threads)(gpu_mem, realRepeats, 10, 0.9899);
+       //MAdd4<T><<< blocks, threads >>>(gpu_mem, realRepeats, 10.0, 0.9899);
        cudaEventRecord(stop, 0);
        cudaEventSynchronize(stop);
        CHECK_CUDA_ERROR();
@@ -1101,7 +1145,8 @@ RunTest(ResultDatabase &resultDB,
        // Execute the MAdd8 kernel
        t = 0.0f;
        cudaEventRecord(start, 0);
-       MAdd8<T><<< blocks, threads >>>(gpu_mem, realRepeats, 10.0, 0.9899);
+       CUPLA_KERNEL(MAdd8<T>)(blocks, threads)(gpu_mem, realRepeats, 10.0, 0.9899);
+       //MAdd8<T><<< blocks, threads >>>(gpu_mem, realRepeats, 10.0, 0.9899);
        cudaEventRecord(stop, 0);
        cudaEventSynchronize(stop);
        CHECK_CUDA_ERROR();
@@ -1161,7 +1206,8 @@ RunTest(ResultDatabase &resultDB,
        // Execute the MulMAdd1 kernel
        t = 0.0f;
        cudaEventRecord(start, 0);
-       MulMAdd1<T><<< blocks, threads >>>(gpu_mem, realRepeats, 3.75, 0.355);
+       CUPLA_KERNEL(MulMAdd1<T>)(blocks, threads)(gpu_mem, realRepeats, 3.75, 0.355);
+       //MulMAdd1<T><<< blocks, threads >>>(gpu_mem, realRepeats, 3.75, 0.355);
        cudaEventRecord(stop, 0);
        cudaEventSynchronize(stop);
        CHECK_CUDA_ERROR();
@@ -1221,7 +1267,8 @@ RunTest(ResultDatabase &resultDB,
        // Execute the MulMAdd2 kernel
        t = 0.0f;
        cudaEventRecord(start, 0);
-       MulMAdd2<T><<< blocks, threads >>>(gpu_mem, realRepeats, 3.75, 0.355);
+       CUPLA_KERNEL(MulMAdd2<T>)(blocks, threads)(gpu_mem, realRepeats, 3.75, 0.355);
+       //MulMAdd2<T><<< blocks, threads >>>(gpu_mem, realRepeats, 3.75, 0.355);
        cudaEventRecord(stop, 0);
        cudaEventSynchronize(stop);
        CHECK_CUDA_ERROR();
@@ -1280,7 +1327,8 @@ RunTest(ResultDatabase &resultDB,
        // Execute the MulMAdd4 kernel
        t = 0.0f;
        cudaEventRecord(start, 0);
-       MulMAdd4<T><<< blocks, threads >>>(gpu_mem, realRepeats, 3.75, 0.355);
+       CUPLA_KERNEL(MulMAdd4<T>)(blocks, threads)(gpu_mem, realRepeats, 3.75, 0.355);
+       //MulMAdd4<T><<< blocks, threads >>>(gpu_mem, realRepeats, 3.75, 0.355);
        cudaEventRecord(stop, 0);
        cudaEventSynchronize(stop);
        CHECK_CUDA_ERROR();
@@ -1339,7 +1387,8 @@ RunTest(ResultDatabase &resultDB,
        // Execute the MulMAdd8 kernel
        t = 0.0f;
        cudaEventRecord(start, 0);
-       MulMAdd8<T><<< blocks, threads >>>(gpu_mem, realRepeats, 3.75, 0.355);
+       CUPLA_KERNEL(MulMAdd8<T>)(blocks, threads)(gpu_mem, realRepeats, 3.75, 0.355);
+       //MulMAdd8<T><<< blocks, threads >>>(gpu_mem, realRepeats, 3.75, 0.355);
        cudaEventRecord(stop, 0);
        cudaEventSynchronize(stop);
        CHECK_CUDA_ERROR();
@@ -1460,149 +1509,167 @@ RunTest(ResultDatabase &resultDB,
 
 
 // Benchmark Kernels
-__global__ void MAddU(float *target, float val1, float val2)
+struct MAddU
 {
-    int index = blockIdx.x*blockDim.x + threadIdx.x;
+      template<typename TAcc>
+      ALPAKA_FN_ACC
+      void operator()(TAcc const & acc, float *target, float val1, float val2) const
+      {
+        int index = blockIdx.x*blockDim.x + threadIdx.x;
 
-    // Create a bunch of local variables we can use up to 32 steps..
-    register float v0=val1,     v1=val2,     v2=v0+v1,    v3=v0+v2;
-    register float v4=v0+v3,    v5=v0+v4,    v6=v0+v5,    v7=v0+v6;
-    register float v8=v0+v7,    v9=v0+v8,    v10=v0+v9,   v11=v0+v10;
-    register float v12=v0+v11,  v13=v0+v12,  v14=v0+v13,  v15=v0+v14;
-    register float v16=v0+v15,  v17=v16+v0,  v18=v16+v1,  v19=v16+v2;
-    register float v20=v16+v3,  v21=v16+v4,  v22=v16+v5,  v23=v16+v6;
-    register float v24=v16+v7,  v25=v16+v8,  v26=v16+v9,  v27=v16+v10;
-    register float v28=v16+v11, v29=v16+v12, v30=v16+v13, v31=v16+v14;
-    register float s0=v0,   s1=v1,   s2=v2,   s3=v3;
-    register float s4=v4,   s5=v5,   s6=v6,   s7=v7;
-    register float s8=v8,   s9=v9,   s10=v10, s11=v11;
-    register float s12=v12, s13=v13, s14=v14, s15=v15;
-    register float s16=v16, s17=v17, s18=v18, s19=v19;
-    register float s20=v20, s21=v21, s22=v22, s23=v23;
-    register float s24=v24, s25=v25, s26=v26, s27=v27;
-    register float s28=v28, s29=v29, s30=v30, s31=v31;
+        // Create a bunch of local variables we can use up to 32 steps..
+        register float v0=val1,     v1=val2,     v2=v0+v1,    v3=v0+v2;
+        register float v4=v0+v3,    v5=v0+v4,    v6=v0+v5,    v7=v0+v6;
+        register float v8=v0+v7,    v9=v0+v8,    v10=v0+v9,   v11=v0+v10;
+        register float v12=v0+v11,  v13=v0+v12,  v14=v0+v13,  v15=v0+v14;
+        register float v16=v0+v15,  v17=v16+v0,  v18=v16+v1,  v19=v16+v2;
+        register float v20=v16+v3,  v21=v16+v4,  v22=v16+v5,  v23=v16+v6;
+        register float v24=v16+v7,  v25=v16+v8,  v26=v16+v9,  v27=v16+v10;
+        register float v28=v16+v11, v29=v16+v12, v30=v16+v13, v31=v16+v14;
+        register float s0=v0,   s1=v1,   s2=v2,   s3=v3;
+        register float s4=v4,   s5=v5,   s6=v6,   s7=v7;
+        register float s8=v8,   s9=v9,   s10=v10, s11=v11;
+        register float s12=v12, s13=v13, s14=v14, s15=v15;
+        register float s16=v16, s17=v17, s18=v18, s19=v19;
+        register float s20=v20, s21=v21, s22=v22, s23=v23;
+        register float s24=v24, s25=v25, s26=v26, s27=v27;
+        register float s28=v28, s29=v29, s30=v30, s31=v31;
 
-    // 10 OP10s inside the loop = 6400 FLOPS in the .ptx code
-    // and 5 loops of 10 OP10s = 32000 FLOPS per pixel total
-    for (int i=0; i<5; i++)
-    {
-        OP10; OP10; OP10; OP10; OP10;
-        OP10; OP10; OP10; OP10; OP10;
+        // 10 OP10s inside the loop = 6400 FLOPS in the .ptx code
+        // and 5 loops of 10 OP10s = 32000 FLOPS per pixel total
+        for (int i=0; i<5; i++)
+        {
+            OP10; OP10; OP10; OP10; OP10;
+            OP10; OP10; OP10; OP10; OP10;
+        }
+
+        float result = (s0+s1+s2+s3+s4+s5+s6+s7+
+                        s8+s9+s10+s11+s12+s13+s14+s15 +
+                        s16+s17+s18+s19+s20+s21+s22+s23+
+                        s24+s25+s26+s27+s28+s29+s30+s31);
+
+        target[index] = result;
     }
-
-    float result = (s0+s1+s2+s3+s4+s5+s6+s7+
-                    s8+s9+s10+s11+s12+s13+s14+s15 +
-                    s16+s17+s18+s19+s20+s21+s22+s23+
-                    s24+s25+s26+s27+s28+s29+s30+s31);
-
-    target[index] = result;
-}
-
-__global__ void MAddU_DP(double *target, double val1, double val2)
+};
+struct MAddU_DP
 {
-    int index = blockIdx.x*blockDim.x + threadIdx.x;
-    register double v0=val1,     v1=val2,     v2=v0+v1,    v3=v0+v2;
-    register double v4=v0+v3,    v5=v0+v4,    v6=v0+v5,    v7=v0+v6;
-    register double v8=v0+v7,    v9=v0+v8,    v10=v0+v9,   v11=v0+v10;
-    register double v12=v0+v11,  v13=v0+v12,  v14=v0+v13,  v15=v0+v14;
-    register double v16=v0+v15,  v17=v16+v0,  v18=v16+v1,  v19=v16+v2;
-    register double v20=v16+v3,  v21=v16+v4,  v22=v16+v5,  v23=v16+v6;
-    register double v24=v16+v7,  v25=v16+v8,  v26=v16+v9,  v27=v16+v10;
-    register double v28=v16+v11, v29=v16+v12, v30=v16+v13, v31=v16+v14;
-    register double s0=v0,   s1=v1,   s2=v2,   s3=v3;
-    register double s4=v4,   s5=v5,   s6=v6,   s7=v7;
-    register double s8=v8,   s9=v9,   s10=v10, s11=v11;
-    register double s12=v12, s13=v13, s14=v14, s15=v15;
-    register double s16=v16, s17=v17, s18=v18, s19=v19;
-    register double s20=v20, s21=v21, s22=v22, s23=v23;
-    register double s24=v24, s25=v25, s26=v26, s27=v27;
-    register double s28=v28, s29=v29, s30=v30, s31=v31;
+  template<typename TAcc>
+  ALPAKA_FN_ACC
+  void operator()(TAcc const & acc, double *target, double val1, double val2) const
+  {
+      int index = blockIdx.x*blockDim.x + threadIdx.x;
+      register double v0=val1,     v1=val2,     v2=v0+v1,    v3=v0+v2;
+      register double v4=v0+v3,    v5=v0+v4,    v6=v0+v5,    v7=v0+v6;
+      register double v8=v0+v7,    v9=v0+v8,    v10=v0+v9,   v11=v0+v10;
+      register double v12=v0+v11,  v13=v0+v12,  v14=v0+v13,  v15=v0+v14;
+      register double v16=v0+v15,  v17=v16+v0,  v18=v16+v1,  v19=v16+v2;
+      register double v20=v16+v3,  v21=v16+v4,  v22=v16+v5,  v23=v16+v6;
+      register double v24=v16+v7,  v25=v16+v8,  v26=v16+v9,  v27=v16+v10;
+      register double v28=v16+v11, v29=v16+v12, v30=v16+v13, v31=v16+v14;
+      register double s0=v0,   s1=v1,   s2=v2,   s3=v3;
+      register double s4=v4,   s5=v5,   s6=v6,   s7=v7;
+      register double s8=v8,   s9=v9,   s10=v10, s11=v11;
+      register double s12=v12, s13=v13, s14=v14, s15=v15;
+      register double s16=v16, s17=v17, s18=v18, s19=v19;
+      register double s20=v20, s21=v21, s22=v22, s23=v23;
+      register double s24=v24, s25=v25, s26=v26, s27=v27;
+      register double s28=v28, s29=v29, s30=v30, s31=v31;
 
 
-    // 10 OP10s inside the loop = 6400 FLOPS in the .ptx code
-    // and 5 loops of 10 OP10s = 32000 FLOPS per pixel total
-    for (int i=0; i<5; i++)
-    {
-        OP10; OP10; OP10; OP10; OP10;
-        OP10; OP10; OP10; OP10; OP10;
+      // 10 OP10s inside the loop = 6400 FLOPS in the .ptx code
+      // and 5 loops of 10 OP10s = 32000 FLOPS per pixel total
+      for (int i=0; i<5; i++)
+      {
+          OP10; OP10; OP10; OP10; OP10;
+          OP10; OP10; OP10; OP10; OP10;
+      }
+      double result = (s0+s1+s2+s3+s4+s5+s6+s7+
+                      s8+s9+s10+s11+s12+s13+s14+s15 +
+                      s16+s17+s18+s19+s20+s21+s22+s23+
+                      s24+s25+s26+s27+s28+s29+s30+s31);
+      target[index] = result;
     }
-    double result = (s0+s1+s2+s3+s4+s5+s6+s7+
-                    s8+s9+s10+s11+s12+s13+s14+s15 +
-                    s16+s17+s18+s19+s20+s21+s22+s23+
-                    s24+s25+s26+s27+s28+s29+s30+s31);
-    target[index] = result;
-}
+};
 
-
-__global__ void MulMAddU(float *target, float val1, float val2)
+struct MulMAddU
 {
-    int index = blockIdx.x*blockDim.x + threadIdx.x;
+  template<typename TAcc>
+  ALPAKA_FN_ACC
+  void operator()(TAcc const & acc, float *target, float val1, float val2) const
+  {
+      int index = blockIdx.x*blockDim.x + threadIdx.x;
 
-    register float v0=val1,     v1=val2,     v2=v0+v1,    v3=v0+v2;
-    register float v4=v0+v3,    v5=v0+v4,    v6=v0+v5,    v7=v0+v6;
-    register float v8=v0+v7,    v9=v0+v8,    v10=v0+v9,   v11=v0+v10;
-    register float v12=v0+v11,  v13=v0+v12,  v14=v0+v13,  v15=v0+v14;
-    register float v16=v0+v15,  v17=v16+v0,  v18=v16+v1,  v19=v16+v2;
-    register float v20=v16+v3,  v21=v16+v4,  v22=v16+v5,  v23=v16+v6;
-    register float v24=v16+v7,  v25=v16+v8,  v26=v16+v9,  v27=v16+v10;
-    register float v28=v16+v11, v29=v16+v12, v30=v16+v13, v31=v16+v14;
-    register float s0=v0,   s1=v1,   s2=v2,   s3=v3;
-    register float s4=v4,   s5=v5,   s6=v6,   s7=v7;
-    register float s8=v8,   s9=v9,   s10=v10, s11=v11;
-    register float s12=v12, s13=v13, s14=v14, s15=v15;
-    register float s16=v16, s17=v17, s18=v18, s19=v19;
-    register float s20=v20, s21=v21, s22=v22, s23=v23;
-    register float s24=v24, s25=v25, s26=v26, s27=v27;
-    register float s28=v28, s29=v29, s30=v30, s31=v31;
+      register float v0=val1,     v1=val2,     v2=v0+v1,    v3=v0+v2;
+      register float v4=v0+v3,    v5=v0+v4,    v6=v0+v5,    v7=v0+v6;
+      register float v8=v0+v7,    v9=v0+v8,    v10=v0+v9,   v11=v0+v10;
+      register float v12=v0+v11,  v13=v0+v12,  v14=v0+v13,  v15=v0+v14;
+      register float v16=v0+v15,  v17=v16+v0,  v18=v16+v1,  v19=v16+v2;
+      register float v20=v16+v3,  v21=v16+v4,  v22=v16+v5,  v23=v16+v6;
+      register float v24=v16+v7,  v25=v16+v8,  v26=v16+v9,  v27=v16+v10;
+      register float v28=v16+v11, v29=v16+v12, v30=v16+v13, v31=v16+v14;
+      register float s0=v0,   s1=v1,   s2=v2,   s3=v3;
+      register float s4=v4,   s5=v5,   s6=v6,   s7=v7;
+      register float s8=v8,   s9=v9,   s10=v10, s11=v11;
+      register float s12=v12, s13=v13, s14=v14, s15=v15;
+      register float s16=v16, s17=v17, s18=v18, s19=v19;
+      register float s20=v20, s21=v21, s22=v22, s23=v23;
+      register float s24=v24, s25=v25, s26=v26, s27=v27;
+      register float s28=v28, s29=v29, s30=v30, s31=v31;
 
-    // 10 OP10s inside the loop = 2400 FLOPS in the .ptx code
-    // and 5 loops of 10 OP10s = 12000 FLOPS per pixel total
-    for (int i=0; i<5; i++)
-    {
-        MMOP10; MMOP10; MMOP10; MMOP10; MMOP10;
-        MMOP10; MMOP10; MMOP10; MMOP10; MMOP10;
+      // 10 OP10s inside the loop = 2400 FLOPS in the .ptx code
+      // and 5 loops of 10 OP10s = 12000 FLOPS per pixel total
+      for (int i=0; i<5; i++)
+      {
+          MMOP10; MMOP10; MMOP10; MMOP10; MMOP10;
+          MMOP10; MMOP10; MMOP10; MMOP10; MMOP10;
+      }
+      float result = (s0+s1+s2+s3+s4+s5+s6+s7+
+                      s8+s9+s10+s11+s12+s13+s14+s15 +
+                      s16+s17+s18+s19+s20+s21+s22+s23+
+                      s24+s25+s26+s27+s28+s29+s30+s31);
+
+      target[index] = result;
     }
-    float result = (s0+s1+s2+s3+s4+s5+s6+s7+
-                    s8+s9+s10+s11+s12+s13+s14+s15 +
-                    s16+s17+s18+s19+s20+s21+s22+s23+
-                    s24+s25+s26+s27+s28+s29+s30+s31);
+};
 
-    target[index] = result;
-}
-
-__global__ void MulMAddU_DP(double *target, double val1, double val2)
+struct MulMAddU_DP
 {
-    int index = blockIdx.x*blockDim.x + threadIdx.x;
-    register double v0=val1,     v1=val2,     v2=v0+v1,    v3=v0+v2;
-    register double v4=v0+v3,    v5=v0+v4,    v6=v0+v5,    v7=v0+v6;
-    register double v8=v0+v7,    v9=v0+v8,    v10=v0+v9,   v11=v0+v10;
-    register double v12=v0+v11,  v13=v0+v12,  v14=v0+v13,  v15=v0+v14;
-    register double v16=v0+v15,  v17=v16+v0,  v18=v16+v1,  v19=v16+v2;
-    register double v20=v16+v3,  v21=v16+v4,  v22=v16+v5,  v23=v16+v6;
-    register double v24=v16+v7,  v25=v16+v8,  v26=v16+v9,  v27=v16+v10;
-    register double v28=v16+v11, v29=v16+v12, v30=v16+v13, v31=v16+v14;
-    register double s0=v0,   s1=v1,   s2=v2,   s3=v3;
-    register double s4=v4,   s5=v5,   s6=v6,   s7=v7;
-    register double s8=v8,   s9=v9,   s10=v10, s11=v11;
-    register double s12=v12, s13=v13, s14=v14, s15=v15;
-    register double s16=v16, s17=v17, s18=v18, s19=v19;
-    register double s20=v20, s21=v21, s22=v22, s23=v23;
-    register double s24=v24, s25=v25, s26=v26, s27=v27;
-    register double s28=v28, s29=v29, s30=v30, s31=v31;
+  template<typename TAcc>
+  ALPAKA_FN_ACC
+  void operator()(TAcc const & acc, double *target, double val1, double val2) const
+  {
+      int index = blockIdx.x*blockDim.x + threadIdx.x;
+      register double v0=val1,     v1=val2,     v2=v0+v1,    v3=v0+v2;
+      register double v4=v0+v3,    v5=v0+v4,    v6=v0+v5,    v7=v0+v6;
+      register double v8=v0+v7,    v9=v0+v8,    v10=v0+v9,   v11=v0+v10;
+      register double v12=v0+v11,  v13=v0+v12,  v14=v0+v13,  v15=v0+v14;
+      register double v16=v0+v15,  v17=v16+v0,  v18=v16+v1,  v19=v16+v2;
+      register double v20=v16+v3,  v21=v16+v4,  v22=v16+v5,  v23=v16+v6;
+      register double v24=v16+v7,  v25=v16+v8,  v26=v16+v9,  v27=v16+v10;
+      register double v28=v16+v11, v29=v16+v12, v30=v16+v13, v31=v16+v14;
+      register double s0=v0,   s1=v1,   s2=v2,   s3=v3;
+      register double s4=v4,   s5=v5,   s6=v6,   s7=v7;
+      register double s8=v8,   s9=v9,   s10=v10, s11=v11;
+      register double s12=v12, s13=v13, s14=v14, s15=v15;
+      register double s16=v16, s17=v17, s18=v18, s19=v19;
+      register double s20=v20, s21=v21, s22=v22, s23=v23;
+      register double s24=v24, s25=v25, s26=v26, s27=v27;
+      register double s28=v28, s29=v29, s30=v30, s31=v31;
 
-    // 10 OP10s inside the loop = 2400 FLOPS in the .ptx code
-    // and 5 loops of 10 OP10s = 12000 FLOPS per pixel total
-    for (int i=0; i<5; i++)
-    {
-        MMOP10; MMOP10; MMOP10; MMOP10; MMOP10;
-        MMOP10; MMOP10; MMOP10; MMOP10; MMOP10;
+      // 10 OP10s inside the loop = 2400 FLOPS in the .ptx code
+      // and 5 loops of 10 OP10s = 12000 FLOPS per pixel total
+      for (int i=0; i<5; i++)
+      {
+          MMOP10; MMOP10; MMOP10; MMOP10; MMOP10;
+          MMOP10; MMOP10; MMOP10; MMOP10; MMOP10;
+      }
+      double result = (s0+s1+s2+s3+s4+s5+s6+s7+
+                      s8+s9+s10+s11+s12+s13+s14+s15 +
+                      s16+s17+s18+s19+s20+s21+s22+s23+
+                      s24+s25+s26+s27+s28+s29+s30+s31);
+      target[index] = result;
     }
-    double result = (s0+s1+s2+s3+s4+s5+s6+s7+
-                    s8+s9+s10+s11+s12+s13+s14+s15 +
-                    s16+s17+s18+s19+s20+s21+s22+s23+
-                    s24+s25+s26+s27+s28+s29+s30+s31);
-    target[index] = result;
-}
+};
 
 // v = 10.0
 #define ADD1_OP   s=v-s;
@@ -1677,230 +1744,322 @@ __global__ void MulMAddU_DP(double *target, double val1, double val2)
      MULMADD8_OP MULMADD8_OP MULMADD8_OP MULMADD8_OP MULMADD8_OP
 
 
-template <class T>
-__global__ void Add1(T *data, int nIters, T v) {
-  int gid = blockIdx.x*blockDim.x + threadIdx.x;
-  register T s = data[gid];
-  for (int j=0 ; j<nIters ; ++j) {
-     /* Each macro op has 20 operations.
-        Unroll 12 more times for 240 operations total.
-      */
-     ADD1_MOP20 ADD1_MOP20 ADD1_MOP20 ADD1_MOP20 ADD1_MOP20 ADD1_MOP20
-     ADD1_MOP20 ADD1_MOP20 ADD1_MOP20 ADD1_MOP20 ADD1_MOP20 ADD1_MOP20
+template< typename T>
+struct Add1
+{
+  template<typename TAcc>
+ALPAKA_FN_ACC
+void operator()(TAcc const & acc, T* data, int nIters, T v) const
+  {
+    int gid = blockIdx.x*blockDim.x + threadIdx.x;
+    register T s = data[gid];
+    for (int j=0 ; j<nIters ; ++j) {
+       /* Each macro op has 20 operations.
+          Unroll 12 more times for 240 operations total.
+        */
+       ADD1_MOP20 ADD1_MOP20 ADD1_MOP20 ADD1_MOP20 ADD1_MOP20 ADD1_MOP20
+       ADD1_MOP20 ADD1_MOP20 ADD1_MOP20 ADD1_MOP20 ADD1_MOP20 ADD1_MOP20
+    }
+    data[gid] = s;
   }
-  data[gid] = s;
-}
+};
 
-template <class T>
-__global__ void Add2(T *data, int nIters, T v) {
-  int gid = blockIdx.x*blockDim.x + threadIdx.x;
-  register T s = data[gid], s2=10.0f-s;
-  for (int j=0 ; j<nIters ; ++j) {
-     /* Each macro op has 20 operations.
-        Unroll 6 more times for 120 operations total.
-      */
-     ADD2_MOP20 ADD2_MOP20 ADD2_MOP20
-     ADD2_MOP20 ADD2_MOP20 ADD2_MOP20
+
+template< typename T>
+struct Add2
+{
+  template<typename TAcc>
+ALPAKA_FN_ACC
+void operator()(TAcc const & acc, T* data, int nIters, T v) const
+  {
+    int gid = blockIdx.x*blockDim.x + threadIdx.x;
+    register T s = data[gid], s2=10.0f-s;
+    for (int j=0 ; j<nIters ; ++j) {
+       /* Each macro op has 20 operations.
+          Unroll 6 more times for 120 operations total.
+        */
+       ADD2_MOP20 ADD2_MOP20 ADD2_MOP20
+       ADD2_MOP20 ADD2_MOP20 ADD2_MOP20
+    }
+    data[gid] = s+s2;
   }
-  data[gid] = s+s2;
-}
-
-template <class T>
-__global__ void Add4(T *data, int nIters, T v) {
-  int gid = blockIdx.x*blockDim.x + threadIdx.x;
-  register T s = data[gid], s2=10.0f-s, s3=9.0f-s, s4=9.0f-s2;
-  for (int j=0 ; j<nIters ; ++j) {
-     /* Each macro op has 10 operations.
-        Unroll 6 more times for 60 operations total.
-      */
-     ADD4_MOP10 ADD4_MOP10 ADD4_MOP10
-     ADD4_MOP10 ADD4_MOP10 ADD4_MOP10
+};
+template< typename T>
+struct Add4
+{
+  template<typename TAcc>
+ALPAKA_FN_ACC
+void operator()(TAcc const & acc, T* data, int nIters, T v) const
+  {
+    int gid = blockIdx.x*blockDim.x + threadIdx.x;
+    register T s = data[gid], s2=10.0f-s, s3=9.0f-s, s4=9.0f-s2;
+    for (int j=0 ; j<nIters ; ++j) {
+       /* Each macro op has 10 operations.
+          Unroll 6 more times for 60 operations total.
+        */
+       ADD4_MOP10 ADD4_MOP10 ADD4_MOP10
+       ADD4_MOP10 ADD4_MOP10 ADD4_MOP10
+    }
+    data[gid] = (s+s2)+(s3+s4);
   }
-  data[gid] = (s+s2)+(s3+s4);
-}
+};
 
-template <class T>
-__global__ void Add8(T *data, int nIters, T v) {
-  int gid = blockIdx.x*blockDim.x + threadIdx.x;
-  register T s = data[gid], s2=10.0f-s, s3=9.0f-s, s4=9.0f-s2, s5=8.0f-s, s6=8.0f-s2, s7=7.0f-s, s8=7.0f-s2;
-  for (int j=0 ; j<nIters ; ++j) {
-     /* Each macro op has 5 operations.
-        Unroll 6 more times for 30 operations total.
-      */
-     ADD8_MOP5 ADD8_MOP5 ADD8_MOP5
-     ADD8_MOP5 ADD8_MOP5 ADD8_MOP5
+template< typename T>
+struct Add8
+{
+  template<typename TAcc>
+ALPAKA_FN_ACC
+void operator()(TAcc const & acc, T* data, int nIters, T v) const
+  {
+    int gid = blockIdx.x*blockDim.x + threadIdx.x;
+    register T s = data[gid], s2=10.0f-s, s3=9.0f-s, s4=9.0f-s2, s5=8.0f-s, s6=8.0f-s2, s7=7.0f-s, s8=7.0f-s2;
+    for (int j=0 ; j<nIters ; ++j) {
+       /* Each macro op has 5 operations.
+          Unroll 6 more times for 30 operations total.
+        */
+       ADD8_MOP5 ADD8_MOP5 ADD8_MOP5
+       ADD8_MOP5 ADD8_MOP5 ADD8_MOP5
+    }
+    data[gid] = ((s+s2)+(s3+s4))+((s5+s6)+(s7+s8));
   }
-  data[gid] = ((s+s2)+(s3+s4))+((s5+s6)+(s7+s8));
-}
+};
 
-
-template <class T>
-__global__ void Mul1(T *data, int nIters, T v) {
-  int gid = blockIdx.x*blockDim.x + threadIdx.x;
-  register T s = data[gid]-data[gid]+0.999f;
-  for (int j=0 ; j<nIters ; ++j) {
-     /* Each macro op has 20 operations.
-        Unroll 10 more times for 200 operations total.
-      */
-     MUL1_MOP20 MUL1_MOP20 MUL1_MOP20 MUL1_MOP20 MUL1_MOP20
-     MUL1_MOP20 MUL1_MOP20 MUL1_MOP20 MUL1_MOP20 MUL1_MOP20
+template< typename T>
+struct Mul1
+{
+  template<typename TAcc>
+ALPAKA_FN_ACC
+void operator()(TAcc const & acc, T* data, int nIters, T v) const
+  {
+    int gid = blockIdx.x*blockDim.x + threadIdx.x;
+    register T s = data[gid]-data[gid]+0.999f;
+    for (int j=0 ; j<nIters ; ++j) {
+       /* Each macro op has 20 operations.
+          Unroll 10 more times for 200 operations total.
+        */
+       MUL1_MOP20 MUL1_MOP20 MUL1_MOP20 MUL1_MOP20 MUL1_MOP20
+       MUL1_MOP20 MUL1_MOP20 MUL1_MOP20 MUL1_MOP20 MUL1_MOP20
+    }
+    data[gid] = s;
   }
-  data[gid] = s;
-}
+};
 
-template <class T>
-__global__ void Mul2(T *data, int nIters, T v) {
-  int gid = blockIdx.x*blockDim.x + threadIdx.x;
-  register T s = data[gid]-data[gid]+0.999f, s2=s-0.0001f;
-  for (int j=0 ; j<nIters ; ++j) {
-     /* Each macro op has 20 operations.
-        Unroll 5 more times for 100 operations total.
-      */
-     MUL2_MOP20 MUL2_MOP20 MUL2_MOP20
-     MUL2_MOP20 MUL2_MOP20
+template< typename T>
+struct Mul2
+{
+  template<typename TAcc>
+ALPAKA_FN_ACC
+void operator()(TAcc const & acc, T* data, int nIters, T v) const
+  {
+    int gid = blockIdx.x*blockDim.x + threadIdx.x;
+    register T s = data[gid]-data[gid]+0.999f, s2=s-0.0001f;
+    for (int j=0 ; j<nIters ; ++j) {
+       /* Each macro op has 20 operations.
+          Unroll 5 more times for 100 operations total.
+        */
+       MUL2_MOP20 MUL2_MOP20 MUL2_MOP20
+       MUL2_MOP20 MUL2_MOP20
+    }
+    data[gid] = s+s2;
   }
-  data[gid] = s+s2;
-}
+};
 
-template <class T>
-__global__ void Mul4(T *data, int nIters, T v) {
-  int gid = blockIdx.x*blockDim.x + threadIdx.x;
-  register T s = data[gid]-data[gid]+0.999f, s2=s-0.0001f, s3=s-0.0002f, s4=s-0.0003f;
-  for (int j=0 ; j<nIters ; ++j) {
-     /* Each macro op has 10 operations.
-        Unroll 5 more times for 50 operations total.
-      */
-     MUL4_MOP10 MUL4_MOP10 MUL4_MOP10
-     MUL4_MOP10 MUL4_MOP10
+template< typename T>
+struct Mul4
+{
+  template<typename TAcc>
+ALPAKA_FN_ACC
+void operator()(TAcc const & acc, T* data, int nIters, T v) const
+  {
+    int gid = blockIdx.x*blockDim.x + threadIdx.x;
+    register T s = data[gid]-data[gid]+0.999f, s2=s-0.0001f, s3=s-0.0002f, s4=s-0.0003f;
+    for (int j=0 ; j<nIters ; ++j) {
+       /* Each macro op has 10 operations.
+          Unroll 5 more times for 50 operations total.
+        */
+       MUL4_MOP10 MUL4_MOP10 MUL4_MOP10
+       MUL4_MOP10 MUL4_MOP10
+    }
+    data[gid] = (s+s2)+(s3+s4);
   }
-  data[gid] = (s+s2)+(s3+s4);
-}
+};
 
-template <class T>
-__global__ void Mul8(T *data, int nIters, T v) {
-  int gid = blockIdx.x*blockDim.x + threadIdx.x;
-  register T s = data[gid]-data[gid]+0.999f, s2=s-0.0001f, s3=s-0.0002f, s4=s-0.0003f, s5=s-0.0004f, s6=s-0.0005f, s7=s-0.0006f, s8=s-0.0007f;
-  for (int j=0 ; j<nIters ; ++j) {
-     /* Each macro op has 5 operations.
-        Unroll 5 more times for 25 operations total.
-      */
-     MUL8_MOP5 MUL8_MOP5 MUL8_MOP5
-     MUL8_MOP5 MUL8_MOP5
+template< typename T>
+struct Mul8
+{
+  template<typename TAcc>
+ALPAKA_FN_ACC
+void operator()(TAcc const & acc, T* data, int nIters, T v) const
+  {
+    int gid = blockIdx.x*blockDim.x + threadIdx.x;
+    register T s = data[gid]-data[gid]+0.999f, s2=s-0.0001f, s3=s-0.0002f, s4=s-0.0003f, s5=s-0.0004f, s6=s-0.0005f, s7=s-0.0006f, s8=s-0.0007f;
+    for (int j=0 ; j<nIters ; ++j) {
+       /* Each macro op has 5 operations.
+          Unroll 5 more times for 25 operations total.
+        */
+       MUL8_MOP5 MUL8_MOP5 MUL8_MOP5
+       MUL8_MOP5 MUL8_MOP5
+    }
+    data[gid] = ((s+s2)+(s3+s4))+((s5+s6)+(s7+s8));
   }
-  data[gid] = ((s+s2)+(s3+s4))+((s5+s6)+(s7+s8));
-}
+};
 
-
-template <class T>
-__global__ void MAdd1(T *data, int nIters, T v1, T v2) {
-  int gid = blockIdx.x*blockDim.x + threadIdx.x;
-  register T s = data[gid];
-  for (int j=0 ; j<nIters ; ++j) {
-     /* Each macro op has 20 operations.
-        Unroll 12 more times for 240 operations total.
-      */
-     MADD1_MOP20 MADD1_MOP20 MADD1_MOP20 MADD1_MOP20 MADD1_MOP20 MADD1_MOP20
-     MADD1_MOP20 MADD1_MOP20 MADD1_MOP20 MADD1_MOP20 MADD1_MOP20 MADD1_MOP20
+template< typename T>
+struct MAdd1
+{
+  template<typename TAcc>
+ALPAKA_FN_ACC
+void operator()(TAcc const & acc, T* data, int nIters, T v1, T v2) const
+  {
+    int gid = blockIdx.x*blockDim.x + threadIdx.x;
+    register T s = data[gid];
+    for (int j=0 ; j<nIters ; ++j) {
+       /* Each macro op has 20 operations.
+          Unroll 12 more times for 240 operations total.
+        */
+       MADD1_MOP20 MADD1_MOP20 MADD1_MOP20 MADD1_MOP20 MADD1_MOP20 MADD1_MOP20
+       MADD1_MOP20 MADD1_MOP20 MADD1_MOP20 MADD1_MOP20 MADD1_MOP20 MADD1_MOP20
+    }
+    data[gid] = s;
   }
-  data[gid] = s;
-}
+};
 
-template <class T>
-__global__ void MAdd2(T *data, int nIters, T v1, T v2) {
-  int gid = blockIdx.x*blockDim.x + threadIdx.x;
-  register T s = data[gid], s2=10.0f-s;
-  for (int j=0 ; j<nIters ; ++j) {
-     /* Each macro op has 20 operations.
-        Unroll 6 more times for 120 operations total.
-      */
-     MADD2_MOP20 MADD2_MOP20 MADD2_MOP20
-     MADD2_MOP20 MADD2_MOP20 MADD2_MOP20
+template< typename T>
+struct MAdd2
+{
+  template<typename TAcc>
+ALPAKA_FN_ACC
+void operator()(TAcc const & acc, T* data, int nIters, T v1, T v2) const
+  {
+    int gid = blockIdx.x*blockDim.x + threadIdx.x;
+    register T s = data[gid], s2=10.0f-s;
+    for (int j=0 ; j<nIters ; ++j) {
+       /* Each macro op has 20 operations.
+          Unroll 6 more times for 120 operations total.
+        */
+       MADD2_MOP20 MADD2_MOP20 MADD2_MOP20
+       MADD2_MOP20 MADD2_MOP20 MADD2_MOP20
+    }
+    data[gid] = s+s2;
   }
-  data[gid] = s+s2;
-}
+};
 
-template <class T>
-__global__ void MAdd4(T *data, int nIters, T v1, T v2) {
-  int gid = blockIdx.x*blockDim.x + threadIdx.x;
-  register T s = data[gid], s2=10.0f-s, s3=9.0f-s, s4=9.0f-s2;
-  for (int j=0 ; j<nIters ; ++j) {
-     /* Each macro op has 10 operations.
-        Unroll 6 more times for 60 operations total.
-      */
-     MADD4_MOP10 MADD4_MOP10 MADD4_MOP10
-     MADD4_MOP10 MADD4_MOP10 MADD4_MOP10
+template< typename T>
+struct MAdd4
+{
+  template<typename TAcc>
+ALPAKA_FN_ACC
+void operator()(TAcc const & acc, T* data, int nIters, T v1, T v2) const
+  {
+    int gid = blockIdx.x*blockDim.x + threadIdx.x;
+    register T s = data[gid], s2=10.0f-s, s3=9.0f-s, s4=9.0f-s2;
+    for (int j=0 ; j<nIters ; ++j) {
+       /* Each macro op has 10 operations.
+          Unroll 6 more times for 60 operations total.
+        */
+       MADD4_MOP10 MADD4_MOP10 MADD4_MOP10
+       MADD4_MOP10 MADD4_MOP10 MADD4_MOP10
+    }
+    data[gid] = (s+s2)+(s3+s4);
   }
-  data[gid] = (s+s2)+(s3+s4);
-}
+};
 
-template <class T>
-__global__ void MAdd8(T *data, int nIters, T v1, T v2) {
-  int gid = blockIdx.x*blockDim.x + threadIdx.x;
-  register T s = data[gid], s2=10.0f-s, s3=9.0f-s, s4=9.0f-s2, s5=8.0f-s, s6=8.0f-s2, s7=7.0f-s, s8=7.0f-s2;
-  for (int j=0 ; j<nIters ; ++j) {
-     /* Each macro op has 5 operations.
-        Unroll 6 more times for 30 operations total.
-      */
-     MADD8_MOP5 MADD8_MOP5 MADD8_MOP5
-     MADD8_MOP5 MADD8_MOP5 MADD8_MOP5
+template< typename T>
+struct MAdd8
+{
+  template<typename TAcc>
+ALPAKA_FN_ACC
+void operator()(TAcc const & acc, T* data, int nIters, T v1, T v2) const
+  {
+    int gid = blockIdx.x*blockDim.x + threadIdx.x;
+    register T s = data[gid], s2=10.0f-s, s3=9.0f-s, s4=9.0f-s2, s5=8.0f-s, s6=8.0f-s2, s7=7.0f-s, s8=7.0f-s2;
+    for (int j=0 ; j<nIters ; ++j) {
+       /* Each macro op has 5 operations.
+          Unroll 6 more times for 30 operations total.
+        */
+       MADD8_MOP5 MADD8_MOP5 MADD8_MOP5
+       MADD8_MOP5 MADD8_MOP5 MADD8_MOP5
+    }
+    data[gid] = ((s+s2)+(s3+s4))+((s5+s6)+(s7+s8));
   }
-  data[gid] = ((s+s2)+(s3+s4))+((s5+s6)+(s7+s8));
-}
+};
 
-
-template <class T>
-__global__ void MulMAdd1(T *data, int nIters, T v1, T v2) {
-  int gid = blockIdx.x*blockDim.x + threadIdx.x;
-  register T s = data[gid];
-  for (int j=0 ; j<nIters ; ++j) {
-     /* Each macro op has 20 operations.
-        Unroll 8 more times for 160 operations total.
-      */
-     MULMADD1_MOP20 MULMADD1_MOP20 MULMADD1_MOP20 MULMADD1_MOP20
-     MULMADD1_MOP20 MULMADD1_MOP20 MULMADD1_MOP20 MULMADD1_MOP20
+template< typename T>
+struct MulMAdd1
+{
+  template<typename TAcc>
+ALPAKA_FN_ACC
+void operator()(TAcc const & acc, T* data, int nIters, T v1, T v2) const
+  {
+    int gid = blockIdx.x*blockDim.x + threadIdx.x;
+    register T s = data[gid];
+    for (int j=0 ; j<nIters ; ++j) {
+       /* Each macro op has 20 operations.
+          Unroll 8 more times for 160 operations total.
+        */
+       MULMADD1_MOP20 MULMADD1_MOP20 MULMADD1_MOP20 MULMADD1_MOP20
+       MULMADD1_MOP20 MULMADD1_MOP20 MULMADD1_MOP20 MULMADD1_MOP20
+    }
+    data[gid] = s;
   }
-  data[gid] = s;
-}
+};
 
-template <class T>
-__global__ void MulMAdd2(T *data, int nIters, T v1, T v2) {
-  int gid = blockIdx.x*blockDim.x + threadIdx.x;
-  register T s = data[gid], s2=10.0f-s;
-  for (int j=0 ; j<nIters ; ++j) {
-     /* Each macro op has 20 operations.
-        Unroll 4 more times for 80 operations total.
-      */
-     MULMADD2_MOP20 MULMADD2_MOP20
-     MULMADD2_MOP20 MULMADD2_MOP20
+template< typename T>
+struct MulMAdd2
+{
+  template<typename TAcc>
+ALPAKA_FN_ACC
+void operator()(TAcc const & acc, T* data, int nIters, T v1, T v2) const
+  {
+    int gid = blockIdx.x*blockDim.x + threadIdx.x;
+    register T s = data[gid], s2=10.0f-s;
+    for (int j=0 ; j<nIters ; ++j) {
+       /* Each macro op has 20 operations.
+          Unroll 4 more times for 80 operations total.
+        */
+       MULMADD2_MOP20 MULMADD2_MOP20
+       MULMADD2_MOP20 MULMADD2_MOP20
+    }
+    data[gid] = s+s2;
   }
-  data[gid] = s+s2;
-}
+};
 
-template <class T>
-__global__ void MulMAdd4(T *data, int nIters, T v1, T v2) {
-  int gid = blockIdx.x*blockDim.x + threadIdx.x;
-  register T s = data[gid], s2=10.0f-s, s3=9.0f-s, s4=9.0f-s2;
-  for (int j=0 ; j<nIters ; ++j) {
-     /* Each macro op has 10 operations.
-        Unroll 4 more times for 40 operations total.
-      */
-     MULMADD4_MOP10 MULMADD4_MOP10
-     MULMADD4_MOP10 MULMADD4_MOP10
+template< typename T>
+struct MulMAdd4
+{
+  template<typename TAcc>
+ALPAKA_FN_ACC
+void operator()(TAcc const & acc, T* data, int nIters, T v1, T v2) const
+  {
+    int gid = blockIdx.x*blockDim.x + threadIdx.x;
+    register T s = data[gid], s2=10.0f-s, s3=9.0f-s, s4=9.0f-s2;
+    for (int j=0 ; j<nIters ; ++j) {
+       /* Each macro op has 10 operations.
+          Unroll 4 more times for 40 operations total.
+        */
+       MULMADD4_MOP10 MULMADD4_MOP10
+       MULMADD4_MOP10 MULMADD4_MOP10
+    }
+    data[gid] = (s+s2)+(s3+s4);
   }
-  data[gid] = (s+s2)+(s3+s4);
-}
+};
 
-template <class T>
-__global__ void MulMAdd8(T *data, int nIters, T v1, T v2) {
-  int gid = blockIdx.x*blockDim.x + threadIdx.x;
-  register T s = data[gid], s2=10.0f-s, s3=9.0f-s, s4=9.0f-s2, s5=8.0f-s, s6=8.0f-s2, s7=7.0f-s, s8=7.0f-s2;
-  for (int j=0 ; j<nIters ; ++j) {
-     /* Each macro op has 5 operations.
-        Unroll 4 more times for 20 operations total.
-      */
-     MULMADD8_MOP5 MULMADD8_MOP5
-     MULMADD8_MOP5 MULMADD8_MOP5
+template< typename T>
+struct MulMAdd8
+{
+  template<typename TAcc>
+ALPAKA_FN_ACC
+void operator()(TAcc const & acc, T* data, int nIters, T v1, T v2) const
+  {
+    int gid = blockIdx.x*blockDim.x + threadIdx.x;
+    register T s = data[gid], s2=10.0f-s, s3=9.0f-s, s4=9.0f-s2, s5=8.0f-s, s6=8.0f-s2, s7=7.0f-s, s8=7.0f-s2;
+    for (int j=0 ; j<nIters ; ++j) {
+       /* Each macro op has 5 operations.
+          Unroll 4 more times for 20 operations total.
+        */
+       MULMADD8_MOP5 MULMADD8_MOP5
+       MULMADD8_MOP5 MULMADD8_MOP5
+    }
+    data[gid] = ((s+s2)+(s3+s4))+((s5+s6)+(s7+s8));
   }
-  data[gid] = ((s+s2)+(s3+s4))+((s5+s6)+(s7+s8));
-}
-
+};

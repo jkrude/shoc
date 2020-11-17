@@ -2,6 +2,7 @@
 #include "cudacommon.h"
 #include "OptionParser.h"
 #include "ResultDatabase.h"
+#include "CuplaInclude.hpp"
 
 // ****************************************************************************
 // Function: addBenchmarkSpecOptions

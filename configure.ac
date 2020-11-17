@@ -40,9 +40,9 @@ then
 elif test $ac_cv_prog_cxx_g = yes
 then
     if test "$GXX" = yes; then
-        NVCXXFLAGS="-g -O2"
+        NVCXXFLAGS="-g -O2 -x cu"
     else
-        NVCXXFLAGS="-g"
+        NVCXXFLAGS="-g -x cu"
     fi
 else
     if test "$GXX" = yes

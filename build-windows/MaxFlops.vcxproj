@@ -98,7 +98,7 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
     <ClCompile Include="..\src\cuda\common\main.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <CudaCompile Include="..\src\cuda\level0\MaxFlops.cu" />
+    <CudaCompile Include="..\src\cuda\level0\MaxFlops.pp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
