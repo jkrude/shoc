@@ -1,21 +1,71 @@
 
-The Scalable HeterOgeneous Computing (SHOC) benchmark suite is a
-collection of benchmark programs testing the performance and
-stability of systems using computing devices with non-traditional architectures
-for general purpose computing. Its initial focus is on systems containing
-Graphics Processing Units (GPUs) and multi-core processors, and on the
-OpenCL programming standard. It can be used on clusters as well as individual
-hosts.
+## Some shocking alpaka
 
-Documentation on configuring, building, and running the SHOC benchmark
-programs is contained in the SHOC user manual, in the doc subdirectory
-of the SHOC source code tree.  The file INSTALL.txt contains a sketch of
-those instructions for rapid installation.
+Porting the [shoc](https://github.com/vetter/shoc) benchmark-suit to [alpaka](https://github.com/alpaka-group/alpaka).
 
-Installation should be familiar to anyone who is experienced with configure
-and make, see the config directory for some examples.  Also, if your
-platform requires regenerating the configure script, see build-aux/bootstrap.sh
-and the manual for more details.
+###Currently found problems: 
 
-Last update: 2014-04-13 15:39:22 kspaff
+shoc port intermediate-report
 
+#### DeviceMemory.cpp
+
+> *shoc/src/cuda/level0/DeviceMemory.cpp*
+
+**Function:** `TestTextureMem`
+
+| Shoc                     | Cupla/Alpaka                                                 |
+| ------------------------ | ------------------------------------------------------------ |
+| `cudaArray`              | cupla defines `cuplaArray` but this leads to an empty struct |
+| `cudaMallocArray()`      | marked as not existing                                       |
+| `cudaMemcpyToArray()`    | marked as not existing                                       |
+| `cudaBindTextureToArray` | marked as not existing                                       |
+
+
+
+**Kernel:** readTexels / readTexelsInCache /readTexelsRandom
+
+| Shoc      | Cupla/Alpaka                  |
+| --------- | ----------------------------- |
+| `tex2D()` | not mentioned in cupla/alpaka |
+
+
+
+**Handling:** exluded `TestTextureMem`
+
+
+
+#### BusSpeedReadback.cpp
+
+> *shoc/src/cuda/level0/BusSpeedReadback.cpp*
+
+
+
+| Shoc                                    | Cupla/Alpaka                  |
+| --------------------------------------- | ----------------------------- |
+| `cudaThreadSynchronize` (*deprecated* ) | not mentioned in cupla/alpaka |
+
+
+
+**Handling:** not decided
+
+## Setup
+```shell
+export CUPLA_ROOT=<cupla>
+export CPATH=$CPAHT:$CUPLA_ROOT/include # or -I
+export CPATH=$CPATH:$CUPLA_ROOT/alpaka/include # or -I
+
+
+sh /shoc/configure CXX=<NVCC_ROOT> \
+    CXXFLAGS="-x cu --expt-relaxed-constexpr"\
+    NVCXXFLAGS="--expt-relaxed-constexpr"\
+    --without-opencl\
+    --without-mpi
+
+#set CXX because otherwise nvcc wont be used for g++
+#CXXFLAGS="-x cu": Tell nvcc to compile .cpp too
+#--expt-relaxed-constexpr: ignore calling __host__ from __device__
+
+make VERBOSE=1 -j8 |& tee build.log
+
+make install
+```
