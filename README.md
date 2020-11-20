@@ -3,7 +3,7 @@
 
 Porting the [shoc](https://github.com/vetter/shoc) benchmark-suit to [alpaka](https://github.com/alpaka-group/alpaka).
 
-###Currently found problems: 
+### Currently found problems: 
 
 shoc port intermediate-report
 
