@@ -1,4 +1,4 @@
-#include <cuda.h>
+#include "CuplaInclude.hpp"
 #include <fstream>
 #include <iostream>
 #include <limits.h>
@@ -229,9 +229,12 @@ void RunTest1(ResultDatabase &resultDB, OptionParser &op, Graph *G)
                         sizeof(int),cudaMemcpyHostToDevice));
 
             cudaEventRecord( start_cuda_event,0);
-            BFS_kernel_warp<<<numBlocks,devProp.maxThreadsPerBlock>>>
-            (d_costArray,d_edgeArray,d_edgeArrayAux, W_SZ, CHUNK_SZ, numVerts,
-                iters,d_flag);
+            CUPLA_KERNEL(BFS_kernel_warp)(numBlocks,devProp.maxThreadsPerBlock)
+                (d_costArray,d_edgeArray,d_edgeArrayAux, W_SZ, CHUNK_SZ, numVerts,
+                    iters,d_flag);
+            //BFS_kernel_warp<<<numBlocks,devProp.maxThreadsPerBlock>>>
+            //(d_costArray,d_edgeArray,d_edgeArrayAux, W_SZ, CHUNK_SZ, numVerts,
+            //    iters,d_flag);
             CHECK_CUDA_ERROR();
             cudaEventRecord(stop_cuda_event,0);
             cudaEventSynchronize(stop_cuda_event);
@@ -513,43 +516,60 @@ void RunTest2(ResultDatabase &resultDB, OptionParser &op, Graph *G)
         while(frontier_length>0)
         {
             //Call Reset_kernel function
-            Reset_kernel_parameters<<<1,1>>>(d_frontier_length);
+            CUPLA_KERNEL(Reset_kernel_parameters)(1,1)(d_frontier_length);
+            //Reset_kernel_parameters<<<1,1>>>(d_frontier_length);
             CHECK_CUDA_ERROR();
 
             //kernel for frontier length within one block
             if(frontier_length<devProp.maxThreadsPerBlock)
             {
-                BFS_kernel_one_block_spill<<<1, devProp.maxThreadsPerBlock,
-                    shared_mem1>>>
-                (d_frontier,frontier_length,d_costArray,d_visited,
-                 d_edgeArray,d_edgeArrayAux,numVerts,numEdges,
-                 d_frontier_length,q_size1);
+                CUPLA_KERNEL(BFS_kernel_one_block_spill)(1, devProp.maxThreadsPerBlock, shared_mem1)
+                    (d_frontier,frontier_length,d_costArray,d_visited,
+                        d_edgeArray,d_edgeArrayAux,numVerts,numEdges,
+                        d_frontier_length,q_size1);
+
+                //BFS_kernel_one_block_spill<<<1, devProp.maxThreadsPerBlock,
+                //    shared_mem1>>>
+                    //(d_frontier,frontier_length,d_costArray,d_visited,
+                        // d_edgeArray,d_edgeArrayAux,numVerts,numEdges,
+                    // d_frontier_length,q_size1);
                 CHECK_CUDA_ERROR();
             }
             //kernel for frontier length within SM blocks
             else if(g_barrier && frontier_length <
                     devProp.maxThreadsPerBlock*devProp.multiProcessorCount)
             {
-                BFS_kernel_SM_block_spill
-                <<<devProp.multiProcessorCount, devProp.maxThreadsPerBlock,
-                    shared_mem2>>>
-                (d_frontier,d_frontier2,frontier_length,d_costArray,
-                 d_visited,d_edgeArray,d_edgeArrayAux,numVerts,
-                 numEdges,d_frontier_length,q_size2);
+                CUPLA_KERNEL(BFS_kernel_SM_block_spill)(devProp.multiProcessorCount,maxThreadsPerBlock,shared_mem2)
+                    (d_frontier,d_frontier2,frontier_length,d_costArray,
+                        d_visited,d_edgeArray,d_edgeArrayAux,numVerts,
+                        numEdges,d_frontier_length,q_size2);
+                //BFS_kernel_SM_block_spill
+                //<<<devProp.multiProcessorCount, devProp.maxThreadsPerBlock,
+                //    shared_mem2>>>
+                //(d_frontier,d_frontier2,frontier_length,d_costArray,
+                // d_visited,d_edgeArray,d_edgeArrayAux,numVerts,
+                // numEdges,d_frontier_length,q_size2);
                 CHECK_CUDA_ERROR();
             }
             //kernel for frontier length greater than SM blocks
             else
             {
-                BFS_kernel_multi_block_spill
-                <<<numBlocks, devProp.maxThreadsPerBlock,shared_mem2>>>
-                (d_frontier,d_frontier2,frontier_length,d_costArray,
-                 d_visited,d_edgeArray,d_edgeArrayAux,numVerts,
-                 numEdges,d_frontier_length,q_size2);
+                CUPLA_KERNEL(BFS_kernel_multi_block_spill)
+                    (numBlocks, devProp.maxThreadsPerBlock,shared_mem2)
+                    (d_frontier,d_frontier2,frontier_length,d_costArray,
+                        d_visited,d_edgeArray,d_edgeArrayAux,numVerts,
+                        numEdges,d_frontier_length,q_size2);
+                //BFS_kernel_multi_block_spill
+                //<<<numBlocks, devProp.maxThreadsPerBlock,shared_mem2>>>
+                //(d_frontier,d_frontier2,frontier_length,d_costArray,
+                // d_visited,d_edgeArray,d_edgeArrayAux,numVerts,
+                // numEdges,d_frontier_length,q_size2);
                 CHECK_CUDA_ERROR();
 
-                Frontier_copy<<<numBlocks, devProp.maxThreadsPerBlock>>>(
+                CUPLA_KERNEL(Frontier_copy)(numBlocks, devProp.maxThreadsPerBlock)(
                     d_frontier,d_frontier2,d_frontier_length);
+                //Frontier_copy<<<numBlocks, devProp.maxThreadsPerBlock>>>(
+                //    d_frontier,d_frontier2,d_frontier_length);
                 CHECK_CUDA_ERROR();
             }
             //Get the current frontier length
